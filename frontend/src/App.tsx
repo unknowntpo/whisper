@@ -3,6 +3,7 @@ import Task, { taskData } from './components/Task'
 import Test from './pages/Test'
 import Chat from './pages/Chat'
 import Calculator from './pages/Calculator'
+import WhisperChat from './pages/WhisperChat'
 
 function App() {
   return (
@@ -21,6 +22,9 @@ function App() {
             </Link>
 						<Link to="/calculator" className="text-blue-500 hover:text-blue-700">
               Calculator
+            </Link>
+            <Link to="/whisper-chat" className="text-blue-500 hover:text-blue-700">
+              WhisperChat
             </Link>
           </div>
         </nav>
@@ -42,6 +46,7 @@ function App() {
           <Route path="/test" element={<Test />} />
 					<Route path="/chat" element={<Chat />} />
 					<Route path="/calculator" element={<Calculator />} />
+          <Route path="/whisper-chat" element={<WhisperChat />} />
         </Routes>
       </div>
     </BrowserRouter>
