@@ -4,30 +4,33 @@ import { render, screen, fireEvent } from '@testing-library/react'
 import WhisperChat from './WhisperChat'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 import WS from 'vitest-websocket-mock'
+import { vi } from 'vitest'
 
 // Clean up WebSocket mock after each test
 let server: WS
 
 describe('WhisperChat', () => {
   beforeEach(() => {
-    server = new WS('ws://localhost:8000/ws/chat', { jsonProtocol: true })
+    // Fix the WebSocket URL to match your component
+    server = new WS('ws://localhost:8000/v1/chat/ws', { jsonProtocol: true })
+    // Add this mock for scrollIntoView
+    Element.prototype.scrollIntoView = vi.fn()
   })
 
   afterEach(() => {
     WS.clean()
   })
 
-  it('renders the WhisperChat placeholder', () => {
+  it('renders the WhisperChat component', () => {
     render(<WhisperChat />)
     expect(screen.getByText('Whisper Chat Room')).toBeInTheDocument()
-    expect(screen.getByText('This is the WhisperChat room. Real-time chat coming soon.')).toBeInTheDocument()
+    expect(screen.getByPlaceholderText('Type your message...')).toBeInTheDocument()
   })
 
   it('connects to WebSocket server', async () => {
     render(<WhisperChat />)
-    // Wait for the WebSocket connection
+    // Wait for the WebSocket connection with a timeout
     await server.connected
-    // Now server is being used
     expect(server).toBeDefined()
   })
 
