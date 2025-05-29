@@ -10,7 +10,9 @@ from app.entities.chat_message import ChatMessage
 from app.entities.item import Item
 from app.infra.engine import engine
 from app.main import app
-from app.routers.v1.ChatRouter import ChatMessageCreateRequest
+from app.routers.v1.ChatRouter import (
+    WebSocketChatMessageRequest,
+)
 from app.routers.v1.HeroRouter import get_session
 
 
@@ -28,7 +30,10 @@ def before_each():
 
 
 def test_ChatRouter_read_messages(client):
-    msgs = [ChatMessage(content="Hello from user1"), ChatMessage(content="Hello from user2")]
+    msgs = [
+        ChatMessage(content="Hello from user1", user_id="user1"),
+        ChatMessage(content="Hello from user2", user_id="user2"),
+    ]
     with Session(engine) as session:
         for msg in msgs:
             session.add(msg)
@@ -42,17 +47,24 @@ def test_ChatRouter_read_messages(client):
     assert len(got_messages) == 2
     assert got_messages == msgs
 
+
 def test_ChatRouter_chat(client):
     with client.websocket_connect("/v1/chat/ws") as ws:
-        msg = ChatMessageCreateRequest(content="Hello from user1")
-        ws.send_json(msg.model_dump())
-        got = ws.receive_json()
+        msg_req = WebSocketChatMessageRequest(
+            data=[ChatMessage(content="Hello from user1", user_id="user1")]
+        )
+
+        ws.send_json(msg_req.model_dump())
+        resp = ws.receive_json()
         with Session(engine) as session:
             rows = session.exec(select(ChatMessage)).all()
             assert len(rows) == 1
             # FIXME: why this is ChatMessage, not sqlalchemy.engine.row.Row ?
             got_msg = rows[0]
-            assert got_msg.content == msg.content
+            assert got_msg.id is not None
+            assert got_msg.user_id == msg_req.data[0].user_id
+            assert got_msg.content == msg_req.data[0].content
+            assert got_msg.id in resp["message_ids"]
 
 
 def test_ChatRouter_get_messages(client):

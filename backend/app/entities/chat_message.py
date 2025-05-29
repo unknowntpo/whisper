@@ -3,6 +3,7 @@ from sqlmodel import SQLModel, Field
 
 # ChatMessage
 class ChatMessageBase(SQLModel):
+    user_id: str
     content: str
 
 

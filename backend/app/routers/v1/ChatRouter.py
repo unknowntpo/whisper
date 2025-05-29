@@ -114,9 +114,26 @@ async def read_messages(session: SessionDep) -> list[ChatMessageResponse]:
 # }
 
 
-class WebSocketMessage(BaseModel):
-    type: Literal["messages"]
-    data: Optional[list[ChatMessage]] = None
+class WebSocketBase(BaseModel):
+    type: Literal["chat_messages_request", "chat_messages_response"]
+
+
+class WebSocketChatMessageRequest(WebSocketBase):
+    type: Literal["chat_messages_request"] = "chat_messages_request"
+    data: list[ChatMessage]
+
+
+class WebSocketChatMessageResponse(WebSocketBase):
+    type: Literal["chat_messages_response"] = "chat_messages_response"
+    status: int
+
+
+class WebSocketChatMessageOkResponse(WebSocketChatMessageResponse):
+    message_ids: list[int]
+
+
+class WebSocketChatMessageErrorResponse(WebSocketChatMessageResponse):
+    error: str
 
 
 @ChatRouter.websocket("/ws")
@@ -124,11 +141,26 @@ async def websocket_endpoint(websocket: WebSocket, session: SessionDep):
     await websocket.accept()
     try:
         while True:
-            msg_json = await websocket.receive_json()
-            msg = ChatMessage(**msg_json)
-            session.add(msg)
-            session.commit()
-            session.refresh(msg)
-            await websocket.send_json(msg.model_dump())
+            try:
+                ws_msg_json = await websocket.receive_json()
+                chat_msg_req = WebSocketChatMessageRequest(**ws_msg_json)
+                chat_msgs = chat_msg_req.data
+                for msg in chat_msgs:
+                    session.add(msg)
+                    session.commit()
+                    session.refresh(msg)
+                resp = WebSocketChatMessageOkResponse(
+                    status=status.HTTP_201_CREATED,
+                    # id should not be None
+                    message_ids=[msg.id for msg in chat_msgs if msg.id is not None],
+                )
+                await websocket.send_json(resp.model_dump())
+            except Exception as e:
+                print(e)
+                resp = WebSocketChatMessageErrorResponse(
+                    status=status.HTTP_400_BAD_REQUEST,
+                    error=f"{e}",
+                )
+                await websocket.send_json(resp.model_dump())
     except WebSocketDisconnect:
         print("Disconnected")
