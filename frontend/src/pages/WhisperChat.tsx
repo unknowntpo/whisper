@@ -13,6 +13,7 @@ export interface WebSocketMessage {
 const WhisperChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
+	// FIXME: user id should be stored in the local storage
   const [userId] = useState(() => crypto.randomUUID());
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -25,15 +26,23 @@ const WhisperChat: React.FC = () => {
     // Fetch message history
     const fetchMessages = async () => {
       try {
-        const response = await fetch('/v1/chat/messages');
-        const data: WebSocketMessage = await response.json();
-        if (data.type === 'messages' && data.data) {
-          setMessages(data.data);
-        }
+        const response = await fetch('http://localhost:8000/v1/chat/messages');
+				if (!response.ok) {
+					throw new Error(`Failed to fetch messages: ${response.statusText}`);
+				}
+				const data: ChatMessage[] = await response.json();
+				console.log(`Fetched ${data.length} messages`);
+				setMessages(data);
       } catch (error) {
         console.error('Failed to fetch messages:', error);
       }
     };
+
+		fetchMessages();
+
+		const intervalId = setInterval(() => {
+			fetchMessages();
+		}, 500);
 
     // Initialize WebSocket connection
     const ws = new WebSocket('ws://localhost:8000/v1/chat/ws');
@@ -61,6 +70,7 @@ const WhisperChat: React.FC = () => {
 
     return () => {
       ws.close();
+			clearInterval(intervalId);
     };
   }, []);
 
@@ -78,7 +88,7 @@ const WhisperChat: React.FC = () => {
 
     try {
       wsRef.current.send(JSON.stringify({
-        type: 'messages',
+        type: 'chat_messages_request',
         data: [message]
       }));
       setInputMessage('');
