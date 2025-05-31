@@ -22,35 +22,27 @@ const WhisperChat: React.FC = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  useEffect(() => {
-    // Fetch message history
-    const fetchMessages = async () => {
-      try {
-        const response = await fetch('http://localhost:8000/v1/chat/messages');
-				if (!response.ok) {
-					throw new Error(`Failed to fetch messages: ${response.statusText}`);
-				}
-				const data: ChatMessage[] = await response.json();
-				console.log(`Fetched ${data.length} messages`);
-				setMessages(data);
-      } catch (error) {
-        console.error('Failed to fetch messages:', error);
-      }
-    };
+	const fetchMessages = async () => {
+		try {
+			const response = await fetch('http://localhost:8000/v1/chat/messages');
+			if (!response.ok) {
+				throw new Error(`Failed to fetch messages: ${response.statusText}`);
+			}
+			const data: ChatMessage[] = await response.json();
+			console.log(`Fetched ${data.length} messages`);
+			setMessages(data);
+		} catch (error) {
+			console.error('Failed to fetch messages:', error);
+		}
+	};
 
-		fetchMessages();
-
-		const intervalId = setInterval(() => {
-			fetchMessages();
-		}, 500);
-
-    // Initialize WebSocket connection
+	// handle websocket connection
+	useEffect(() => {
     const ws = new WebSocket('ws://localhost:8000/v1/chat/ws');
     wsRef.current = ws;
 
     ws.onopen = () => {
       console.log('Connected to WebSocket server');
-      fetchMessages();
     };
 
     ws.onmessage = (event) => {
@@ -70,6 +62,18 @@ const WhisperChat: React.FC = () => {
 
     return () => {
       ws.close();
+    };
+  }, []);
+
+  useEffect(() => {
+    // Fetch message history
+  	fetchMessages();
+
+		const intervalId = setInterval(() => {
+			fetchMessages();
+		}, 500);
+
+    return () => {
 			clearInterval(intervalId);
     };
   }, []);
