@@ -5,7 +5,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 from sqlmodel import Session
 
-from app.infra.engine import engine, create_db_and_tables
+from app.infra.engine import engine
 from app.entities.hero import Hero, HeroBase
 
 HeroRouter = APIRouter(prefix="/v1/heroes", tags=["item"])
@@ -19,11 +19,14 @@ def get_session():
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
+
 class HeroCreateRequest(HeroBase):
     pass
 
+
 class HeroResponse(HeroBase):
     id: int
+
 
 @HeroRouter.post("", response_model=HeroResponse, status_code=http.HTTPStatus.CREATED)
 def create_hero(req: HeroCreateRequest, session: SessionDep) -> HeroResponse:
@@ -32,6 +35,7 @@ def create_hero(req: HeroCreateRequest, session: SessionDep) -> HeroResponse:
     session.commit()
     session.refresh(hero)
     return HeroResponse(**hero.model_dump())
+
 
 @HeroRouter.get("")
 async def read_heroes(session: SessionDep) -> list[HeroResponse]:

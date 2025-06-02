@@ -24,7 +24,7 @@ if is_test:
 else:
     postgres_url = get_postgres_url()
 
-engine = create_engine(postgres_url)
+engine = create_engine(postgres_url, echo=True)
 
 
 def create_test_database():
@@ -32,7 +32,7 @@ def create_test_database():
     # Create connection to default postgres database to create test db if needed
     temp_url = get_postgres_url("postgres")
     # Create engine with autocommit enabled for database creation
-    temp_engine = create_engine(temp_url, isolation_level="AUTOCOMMIT")
+    temp_engine = create_engine(temp_url, echo=True, isolation_level="AUTOCOMMIT")
 
     with temp_engine.connect() as conn:
         # Check if test database exists
@@ -46,7 +46,7 @@ def create_test_database():
 
     # Update connection URL to use test database
     test_postgres_url = get_postgres_url(test_db_name)
-    test_engine = create_engine(test_postgres_url)
+    test_engine = create_engine(test_postgres_url, echo=True)
     print(f"Using test database: {test_db_name}")
 
     return test_postgres_url, test_engine
@@ -66,6 +66,10 @@ def create_db_and_tables():
 
     print(f"postgres_url: {postgres_url}")
     print(f"engine: {engine}")
+
+    if is_test:
+        # drop all tables and create them again
+        SQLModel.metadata.drop_all(engine)
 
     SQLModel.metadata.create_all(engine)
 
