@@ -11,7 +11,7 @@ RUN pip install --upgrade pip && pip install uv
 COPY pyproject.toml uv.lock ./
 
 # Install dependencies
-RUN uv pip install --system --no-deps .
+RUN uv pip install --system .
 
 # Copy application code
 COPY ./app ./app
