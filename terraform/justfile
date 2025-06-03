@@ -1,0 +1,14 @@
+default:
+    @just --list
+
+tf-local-init:
+    tflocal init
+
+tf-local-apply:
+    tflocal apply
+
+tf-aws-init:
+    terraform init
+
+tf-aws-apply:
+    terraform apply
