@@ -1,14 +1,31 @@
+var_file := "$HOME/.terraform/whisper/aws.tfvars"
+
 default:
     @just --list
 
 tf-local-init:
-    tflocal init
+    tflocal init -var-file="{{ var_file }}"
+
+tf-local-plan:
+    tflocal plan -var-file="{{ var_file }}"
 
 tf-local-apply:
-    tflocal apply
+    tflocal apply -var-file="{{ var_file }}"
+
+tf-local-destroy:
+    tflocal destroy -var-file="{{ var_file }}"
+
+tf-local-output:
+    tflocal output ec2_public_ip
 
 tf-aws-init:
-    terraform init
+    terraform init -var-file="{{ var_file }}"
+
+tf-aws-plan:
+    terraform plan -var-file="{{ var_file }}"
 
 tf-aws-apply:
-    terraform apply
+    terraform apply -var-file="{{ var_file }}"
+
+tf-aws-destroy:
+    terraform destroy -var-file="{{ var_file }}"
