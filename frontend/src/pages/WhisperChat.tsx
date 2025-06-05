@@ -14,7 +14,22 @@ const WhisperChat: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
 	// FIXME: user id should be stored in the local storage
-  const [userId] = useState(() => crypto.randomUUID());
+  const [userId] = useState(() => {
+    // Try to get existing userId from localStorage
+    const storedId = localStorage.getItem('whisper_chat_user_id');
+    if (storedId) return storedId;
+
+    // Generate new UUID if none exists
+    const newId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+      const r = Math.random() * 16 | 0;
+      const v = c === 'x' ? r : (r & 0x3 | 0x8);
+      return v.toString(16);
+    });
+    
+    // Store the new ID
+    localStorage.setItem('whisper_chat_user_id', newId);
+    return newId;
+  });
   const wsRef = useRef<WebSocket | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
