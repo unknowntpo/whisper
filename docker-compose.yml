@@ -1,3 +1,5 @@
+# NOTE: Kubernetes manifests are available in the k8s/ folder for EKS deployment.
+# This docker-compose.yml is for local development only.
 version: '3.8'
 
 services:
@@ -5,7 +7,6 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: frontend
     ports:
       - "5173:5173"
     networks:
@@ -14,7 +15,6 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: backend
     ports:
       - "8000:8000"
     depends_on:
@@ -29,7 +29,6 @@ services:
       - app-network
   postgres:
     image: postgres:15
-    container_name: postgres
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
